@@ -29,6 +29,7 @@ function initDb() {
             status TEXT NOT NULL,
             fare REAL,
             distance REAL,
+            idempotency_key TEXT,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL
         )
@@ -186,7 +187,7 @@ app.put('/v1/trips/:trip_id/complete', (req, res) => {
     const distanceNum = parseFloat(distance);
 
     // Get trip details
-    db.get('SELECT * FROM trips WHERE trip_id = ?', [trip_id], async (err, trip) => {
+    db.get("SELECT * FROM trips WHERE trip_id = ? AND (status!='REQUESTED' AND status!='CANCELLED')", [trip_id], async (err, trip) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
@@ -227,9 +228,9 @@ app.put('/v1/trips/:trip_id/complete', (req, res) => {
 
         db.run(`
             UPDATE trips 
-            SET status = ?, fare = ?, distance = ?, updated_at = ? 
+            SET status = ?, fare = ?, distance = ?, updated_at = ?, idempotency_key = ? 
             WHERE trip_id = ?
-        `, [status, fare, distanceNum, new Date().toISOString(), trip_id], async (err) => {
+        `, [status, fare, distanceNum, new Date().toISOString(), idempotencyKey, trip_id], async (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -258,11 +259,11 @@ app.put('/v1/trips/:trip_id/complete', (req, res) => {
 
 
 // GET /v1/trips/{trip_id}/cancel
-app.get('/v1/trips/:trip_id/cancel', (req, res) => {
-    const { trip_id } = req.params;
+app.get('/v1/trips/:rider_id/cancel', (req, res) => {
+    const { rider_id } = req.params;
 
     // Get trip details
-    db.get('SELECT * FROM trips WHERE trip_id = ?', [trip_id], async (err, trip) => {
+    db.get("SELECT * FROM trips WHERE rider_id = ? AND (status = 'ACCEPTED' OR  status = 'REQUESTED')", [rider_id], async (err, trip) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
@@ -272,6 +273,7 @@ app.get('/v1/trips/:trip_id/cancel', (req, res) => {
         }
 
         const driver_id = trip.driver_id;
+        const trip_id = trip.trip_id;
 
         // Update trip status to CANCELLED
         db.run(`
