@@ -282,15 +282,15 @@ app.get('/v1/trips/:trip_id/cancel', (req, res) => {
             }
 
             // Mark driver as available again if driver was assigned
-            // if (driver_id) {
-            //     try {
-            //         const driverServiceUrl = `${tripConstants().driverServiceUrl}/${driver_id}/status`;
-            //         await axios.put(driverServiceUrl, { is_available: true }, { timeout: 5000 });
-            //         console.log(`Driver ${driver_id} marked as available`);
-            //     } catch (driverError) {
-            //         console.error('Error updating driver availability:', driverError.message);
-            //     }
-            // }
+            if (driver_id) {
+                try {
+                    const driverServiceUrl = `${tripConstants().driverServiceUrl}/${driver_id}/status`;
+                    await axios.put(driverServiceUrl, { is_available: true }, { timeout: 5000 });
+                    console.log(`Driver ${driver_id} marked as available`);
+                } catch (driverError) {
+                    console.error('Error updating driver availability:', driverError.message);
+                }
+            }
 
             res.json({
                 trip_id,
