@@ -1,0 +1,29 @@
+{
+    "name": "trip-management-api",
+    "version": "1.0.0",
+    "description": "REST API for trip management service with driver and payment integration",
+    "main": "app.js",
+    "scripts": {
+      "start": "node TripService.js",
+      "dev": "nodemon app.js",
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+      "rest",
+      "api",
+      "trip",
+      "express",
+      "sqlite"
+    ],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+      "express": "^4.18.2",
+      "sqlite3": "^5.1.6",
+      "uuid": "^9.0.1",
+      "axios": "^1.6.2"
+    },
+    "devDependencies": {
+      "nodemon": "^3.0.2"
+    }
+  }
