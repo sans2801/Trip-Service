@@ -256,6 +256,52 @@ app.put('/v1/trips/:trip_id/complete', (req, res) => {
     });
 });
 
+
+// GET /v1/trips/{trip_id}/cancel
+app.get('/v1/trips/:trip_id/cancel', (req, res) => {
+    const { trip_id } = req.params;
+
+    // Get trip details
+    db.get('SELECT * FROM trips WHERE trip_id = ?', [trip_id], async (err, trip) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (!trip) {
+            return res.status(404).json({ error: 'Trip not found' });
+        }
+
+        const driver_id = trip.driver_id;
+
+        // Update trip status to CANCELLED
+        db.run(`
+            UPDATE trips SET status = ?, updated_at = ? WHERE trip_id = ?
+        `, ['CANCELLED', new Date().toISOString(), trip_id], async (err) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+
+            // Mark driver as available again if driver was assigned
+            // if (driver_id) {
+            //     try {
+            //         const driverServiceUrl = `${tripConstants().driverServiceUrl}/${driver_id}/status`;
+            //         await axios.put(driverServiceUrl, { is_available: true }, { timeout: 5000 });
+            //         console.log(`Driver ${driver_id} marked as available`);
+            //     } catch (driverError) {
+            //         console.error('Error updating driver availability:', driverError.message);
+            //     }
+            // }
+
+            res.json({
+                trip_id,
+                status: 'CANCELLED',
+                message: 'Trip cancelled successfully'
+            });
+        });
+    });
+});
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
